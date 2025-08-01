@@ -1,22 +1,6 @@
 {
   "contacts": [
     {
-      "id": 1,
-      "name": "Malala Yousafzai",
-      "type": "Personnalité",
-      "priority": "Haute",
-      "status": "À contacter",
-      "notes": ""
-    },
-    {
-      "id": 3,
-      "name": "Médecins Sans Frontières",
-      "type": "Organisation",
-      "priority": "Moyenne",
-      "status": "En contact",
-      "notes": ""
-    },
-    {
       "id": 1754088022730,
       "name": "test",
       "type": "Organisation",
