@@ -37,12 +37,22 @@
     {
       "id": 1754085216230,
       "label": "Nouvelle tâche",
-      "status": "En cours"
+      "status": "À faire"
     },
     {
       "id": 1754086579220,
       "label": "Nouvelle tâche",
       "status": "En cours"
+    },
+    {
+      "id": 1754087719330,
+      "label": "Nouvelle tâche",
+      "status": "Terminé"
+    },
+    {
+      "id": 1754087722910,
+      "label": "Nouvelle tâche",
+      "status": "Bloqué"
     }
   ]
 }
