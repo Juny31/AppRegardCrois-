@@ -1,6 +1,3 @@
 {
-  "tasks": [],
-  "contacts": [],
-  "notes": "",
-  "progress": 0
+  "foo": "bar"
 }
