@@ -39,6 +39,14 @@
       "priority": "Basse",
       "status": "À contacter",
       "notes": ""
+    },
+    {
+      "id": 1754088557510,
+      "name": "test2",
+      "type": "Organisation",
+      "priority": "Basse",
+      "status": "À contacter",
+      "notes": ""
     }
   ],
   "tasks": [
@@ -61,6 +69,11 @@
       "id": 1754087722910,
       "label": "Nouvelle tâche",
       "status": "Bloqué"
+    },
+    {
+      "id": 1754088566520,
+      "label": "Nouvelle tâche",
+      "status": "Terminé"
     }
   ]
 }
