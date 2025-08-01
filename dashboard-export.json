@@ -53,7 +53,10 @@
     {
       "id": 1754085216230,
       "label": "Nouvelle tâche",
-      "status": "À faire"
+      "status": "En cours",
+      "title": "Ecrire un poeme",
+      "priority": "Moyenne",
+      "description": "test"
     },
     {
       "id": 1754086579220,
