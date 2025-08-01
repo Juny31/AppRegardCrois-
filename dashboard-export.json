@@ -9,27 +9,11 @@
       "notes": ""
     },
     {
-      "id": 2,
-      "name": "Denis Mukwege",
-      "type": "Personnalité",
-      "priority": "Haute",
-      "status": "À contacter",
-      "notes": ""
-    },
-    {
       "id": 3,
       "name": "Médecins Sans Frontières",
       "type": "Organisation",
       "priority": "Moyenne",
       "status": "En contact",
-      "notes": ""
-    },
-    {
-      "id": 4,
-      "name": "Human Rights Watch",
-      "type": "Organisation",
-      "priority": "Moyenne",
-      "status": "En attente",
       "notes": ""
     },
     {
@@ -53,30 +37,16 @@
     {
       "id": 1754085216230,
       "label": "Nouvelle tâche",
-      "status": "En cours",
+      "status": "Terminé",
       "title": "Ecrire un poeme",
-      "priority": "Moyenne",
+      "priority": "Basse",
       "description": "test"
     },
     {
       "id": 1754086579220,
       "label": "Nouvelle tâche",
-      "status": "En cours"
-    },
-    {
-      "id": 1754087719330,
-      "label": "Nouvelle tâche",
-      "status": "Terminé"
-    },
-    {
-      "id": 1754087722910,
-      "label": "Nouvelle tâche",
-      "status": "Bloqué"
-    },
-    {
-      "id": 1754088566520,
-      "label": "Nouvelle tâche",
-      "status": "Terminé"
+      "status": "À faire",
+      "title": "test du test"
     }
   ]
 }
