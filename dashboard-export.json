@@ -1,6 +1,48 @@
 {
-  "tasks": [],
-  "contacts": [],
-  "notes": "",
-  "progress": 0
+  "contacts": [
+    {
+      "id": 1,
+      "name": "Malala Yousafzai",
+      "type": "Personnalité",
+      "priority": "Haute",
+      "status": "À contacter",
+      "notes": ""
+    },
+    {
+      "id": 2,
+      "name": "Denis Mukwege",
+      "type": "Personnalité",
+      "priority": "Haute",
+      "status": "À contacter",
+      "notes": ""
+    },
+    {
+      "id": 3,
+      "name": "Médecins Sans Frontières",
+      "type": "Organisation",
+      "priority": "Moyenne",
+      "status": "En contact",
+      "notes": ""
+    },
+    {
+      "id": 4,
+      "name": "Human Rights Watch",
+      "type": "Organisation",
+      "priority": "Moyenne",
+      "status": "En attente",
+      "notes": ""
+    }
+  ],
+  "tasks": [
+    {
+      "id": 1754085216230,
+      "label": "Nouvelle tâche",
+      "status": "En cours"
+    },
+    {
+      "id": 1754086579220,
+      "label": "Nouvelle tâche",
+      "status": "En cours"
+    }
+  ]
 }
