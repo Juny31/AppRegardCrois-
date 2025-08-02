@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
@@ -6,19 +5,12 @@ const bcrypt = require('bcryptjs');
 const http = require('http');
 const { Server } = require('socket.io');
 const bodyParser = require('body-parser');
-=======
-const express = require("express");
-const cors = require("cors");
-const http = require("http");
-const { Server } = require("socket.io");
->>>>>>> aaa53ff (ajout des methodes requises)
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(bodyParser.json());
 
-<<<<<<< HEAD
 // SECRET pour les JWT
 const JWT_SECRET = 'vraiment_pas_secure_change_le';
 
@@ -32,24 +24,6 @@ let data = {
 let nextUserId = 1;
 let nextTaskId = 1;
 let nextContactId = 1;
-=======
-const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
-const axios = require("axios");
-
-// !!! Remplace par ton propre token GitHub et le chemin de repo cible !!!
-const GITHUB_TOKEN = "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";
-const GITHUB_REPO = "Juny31/AppRegardCrois-";
-const GITHUB_FILEPATH = "dashboard-export.json";
-const GITHUB_BRANCH = "main";
-
-// Route POST /github-save : sauvegarder le fichier
-app.post("/github-save", async (req, res) => {
-  const content = Buffer.from(JSON.stringify(req.body, null, 2)).toString(
-    "base64"
-  );
-  let sha = null;
->>>>>>> aaa53ff (ajout des methodes requises)
 
 function hash(pwd) { return "!" + pwd.split('').reverse().join('') + "@"; }
 function check(pwd, hashStr) { return hash(pwd) === hashStr; }
@@ -60,27 +34,14 @@ function authMiddleware(req, res, next) {
   if (!auth) return res.status(401).json({ error: 'Missing Authorization header' });
   const token = auth.split(' ')[1];
   try {
-<<<<<<< HEAD
     const payload = jwt.verify(token, JWT_SECRET);
     req.userId = payload.userId;
     next();
   } catch (e) {
     return res.status(401).json({ error: 'Invalid or expired token' });
-=======
-    const fileRes = await axios.get(
-      `https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FILEPATH}?ref=${GITHUB_BRANCH}`,
-      {
-        headers: { Authorization: `token ${GITHUB_TOKEN}` },
-      }
-    );
-    sha = fileRes.data.sha;
-  } catch (err) {
-    // Si le fichier n’existe pas, pas grave, sha reste null (création)
->>>>>>> aaa53ff (ajout des methodes requises)
   }
 }
 
-<<<<<<< HEAD
 // ---- Auth Routes ----
 
 // Inscription
@@ -109,54 +70,9 @@ app.post('/login', (req, res) => {
       next();
     } catch {
       return res.status(401).json({ error: "Token invalide" });
-=======
-  // 2. On pousse la sauvegarde
-  try {
-    const commitRes = await axios.put(
-      `https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FILEPATH}`,
-      {
-        message: `Backup automatique dashboard (${new Date().toISOString()})`,
-        content,
-        branch: GITHUB_BRANCH,
-        ...(sha ? { sha } : {}),
-      },
-      { headers: { Authorization: `token ${GITHUB_TOKEN}` } }
-    );
-    res.json({ ok: true, commit: commitRes.data.commit.sha });
-  } catch (err) {
-    // Juste avant le fallback issue
-    console.error(
-      "Erreur lors de la sauvegarde GitHub:",
-      err?.response?.data || err
-    );
-    // Fallback : crée une issue avec le contenu en base64
-    try {
-      await axios.post(
-        `https://api.github.com/repos/${GITHUB_REPO}/issues`,
-        {
-          title: `[Sauvegarde échouée] dashboard-export.json - ${new Date().toISOString()}`,
-          body: `Contenu base64 :\n\n\`\`\`\n${content}\n\`\`\`\n\nErreur GitHub API :\n${err.message}`,
-        },
-        { headers: { Authorization: `token ${GITHUB_TOKEN}` } }
-      );
-      res.json({ ok: false, fallback: "issue créée" });
-    } catch (e) {
-      console.error(
-        "Erreur lors de la création de fallback issue:",
-        e?.response?.data || e
-      );
-      res
-        .status(500)
-        .json({
-          ok: false,
-          error: "Impossible de créer une issue",
-          details: e.message,
-        });
->>>>>>> aaa53ff (ajout des methodes requises)
     }
   }
 
-<<<<<<< HEAD
   app.get('/me', requireAuth, (req, res) => {
     const u = users.find(u => u.id === req.user.id);
     if (!u) return res.status(401).json({ error: "Utilisateur inconnu" });
@@ -232,89 +148,3 @@ app.delete('/contacts/:id', authMiddleware, (req, res) => {
 
 // ---- Démarrage du serveur ----
 app.listen(4000, () => console.log('Backend running on port 4000 (auth + multiuser)'));
-=======
-let data = {
-  // ...
-  contacts: [
-    {
-      id: 1,
-      name: "Malala Yousafzai",
-      type: "Personnalité",
-      priority: "Haute",
-      status: "À contacter",
-      notes: "",
-    },
-    {
-      id: 2,
-      name: "Denis Mukwege",
-      type: "Personnalité",
-      priority: "Haute",
-      status: "À contacter",
-      notes: "",
-    },
-    {
-      id: 3,
-      name: "Médecins Sans Frontières",
-      type: "Organisation",
-      priority: "Moyenne",
-      status: "En contact",
-      notes: "",
-    },
-    {
-      id: 4,
-      name: "Human Rights Watch",
-      type: "Organisation",
-      priority: "Moyenne",
-      status: "En attente",
-      notes: "",
-    },
-  ],
-  // ...
-};
-
-// Créer un contact
-app.post("/contacts", (req, res) => {
-  const newContact = { ...req.body, id: Date.now() };
-  data.contacts.push(newContact);
-  io.emit("data", data); // broadcast à tous
-  res.json(newContact);
-});
-
-// Modifier un contact
-app.put("/contacts/:id", (req, res) => {
-  const id = Number(req.params.id);
-  const idx = data.contacts.findIndex((c) => c.id === id);
-  if (idx === -1) return res.status(404).json({ error: "Not found" });
-  data.contacts[idx] = { ...data.contacts[idx], ...req.body };
-  io.emit("data", data);
-  res.json(data.contacts[idx]);
-});
-
-// Supprimer un contact
-app.delete("/contacts/:id", (req, res) => {
-  const id = Number(req.params.id);
-  const oldLen = data.contacts.length;
-  data.contacts = data.contacts.filter((c) => c.id !== id);
-  if (data.contacts.length === oldLen)
-    return res.status(404).json({ error: "Not found" });
-  io.emit("data", data);
-  res.json({ success: true });
-});
-
-io.on("connection", (socket) => {
-  socket.emit("init", data);
-  socket.on("update", (newData) => {
-    data = { ...data, ...newData };
-    io.emit("data", data); // broadcast à tous
-  });
-});
-
-app.get("/data", (req, res) => res.json(data));
-app.post("/data", (req, res) => {
-  data = { ...data, ...req.body };
-  io.emit("data", data);
-  res.json({ success: true });
-});
-
-server.listen(4000, () => console.log("Backend running on port 4000"));
->>>>>>> aaa53ff (ajout des methodes requises)

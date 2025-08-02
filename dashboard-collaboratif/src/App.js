@@ -4,7 +4,6 @@ import TaskBoard from "./components/TaskBoard";
 import ContactBoard from "./components/ContactBoard";
 import ProgressDashboard from "./components/ProgressDashboard";
 
-<<<<<<< HEAD
 // ------------------------------
 // -- Helpers pour le JWT --
 // ------------------------------
@@ -19,26 +18,6 @@ function removeToken() {
 }
 function authHeaders() {
   return { Authorization: "Bearer " + getToken() };
-=======
-// --- Analogies : ---
-// - On imagine le backend comme la "mairie" ou le "registre central".
-// - Les composants TaskBoard/ContactBoard sont comme des agents qui éditent une fiche locale,
-//   puis la renvoient à la mairie pour validation.
-
-// --- Sauvegarde GitHub ---
-async function saveToGitHub(data, setStatus) {
-  setStatus("Envoi sur GitHub...");
-  try {
-    const res = await axios.post("http://localhost:4000/github-save", data);
-    if (res.data.ok) {
-      setStatus("Sauvegardé sur GitHub !");
-    } else {
-      setStatus("Erreur : fallback issue GitHub créé");
-    }
-  } catch (e) {
-    setStatus("Erreur critique lors de la sauvegarde");
-  }
->>>>>>> aaa53ff (ajout des methodes requises)
 }
 
 // ------------------------------
@@ -91,7 +70,6 @@ function AuthForm({ setUser, setPage }) {
 // -- Main App --
 // ------------------------------
 function App() {
-<<<<<<< HEAD
   const [user, setUser] = useState(null); // {id, username}
   const [page, setPage] = useState("loading"); // "loading" | "auth" | "dashboard"
   const [tasks, setTasks] = useState([]);
@@ -183,59 +161,6 @@ function App() {
   // --- EXPORT JSON ---
   function exportJSON() {
     const blob = new Blob([JSON.stringify({ tasks, contacts }, null, 2)], {
-=======
-  const [data, setData] = useState({
-    tasks: [],
-    contacts: [],
-    notes: "",
-    progress: 0,
-  });
-  const [githubStatus, setGithubStatus] = useState('');
-
-  // --- Au chargement, on va chercher les données actuelles ---
-  useEffect(() => {
-    fetch('http://localhost:4000/data')
-      .then(r => r.json())
-      .then(json => setData(json));
-  }, []);
-
-  // --- Sauvegarde auto sur GitHub toutes les 2 minutes ---
-  useEffect(() => {
-    const interval = setInterval(() => {
-      saveToGitHub(data, setGithubStatus);
-    }, 120000);
-    return () => clearInterval(interval);
-  }, [data]);
-
-  // --- HANDLERS pour TaskBoard et ContactBoard ---
-  // On met à jour sur le serveur (POST /data), puis on MAJ localement à la réponse
-  const updateTasks = async (tasks) => {
-    const res = await fetch('http://localhost:4000/data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tasks })
-    });
-    if (res.ok) {
-      setData(data0 => ({ ...data0, tasks }));
-    }
-    // sinon tu pourrais rajouter une gestion d'erreur ici !
-  };
-
-  const updateContacts = async (contacts) => {
-    const res = await fetch('http://localhost:4000/data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contacts })
-    });
-    if (res.ok) {
-      setData(data0 => ({ ...data0, contacts }));
-    }
-  };
-
-  // --- EXPORT JSON (copié-collé de ton code) ---
-  function exportJSON(data) {
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
->>>>>>> aaa53ff (ajout des methodes requises)
       type: "application/json",
     });
     const url = URL.createObjectURL(blob);
@@ -246,7 +171,6 @@ function App() {
     URL.revokeObjectURL(url);
   }
 
-<<<<<<< HEAD
   // --- Déconnexion ---
   function logout() {
     removeToken();
@@ -289,23 +213,6 @@ function App() {
         onUpdate={handleContactUpdate}
         onDelete={handleContactDelete}
       />
-=======
-  // --- Affichage principal ---
-  return (
-    <div>
-      <h1>Dashboard Collaboratif</h1>
-      <button onClick={() => saveToGitHub(data, setGithubStatus)}>
-        Sauvegarder sur GitHub
-      </button>
-      <button onClick={() => exportJSON(data)} style={{ marginLeft: 8 }}>
-        Exporter en JSON
-      </button>
-      <span style={{ marginLeft: 10 }}>{githubStatus}</span>
-      <ProgressDashboard tasks={data.tasks} />
-      <TaskBoard tasks={data.tasks} onUpdate={updateTasks} />
-      <ContactBoard contacts={data.contacts} onUpdate={updateContacts} />
-      {/* Ajoute ici les autres composants si besoin */}
->>>>>>> aaa53ff (ajout des methodes requises)
     </div>
   );
 }
