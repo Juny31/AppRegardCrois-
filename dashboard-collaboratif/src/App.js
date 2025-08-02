@@ -1,37 +1,166 @@
 import React, { useEffect, useState } from "react";
-import io from "socket.io-client";
 import axios from "axios";
 import TaskBoard from "./components/TaskBoard";
 import ContactBoard from "./components/ContactBoard";
 import ProgressDashboard from "./components/ProgressDashboard";
 
-const socket = io("http://localhost:4000");
+// ------------------------------
+// -- Helpers pour le JWT --
+// ------------------------------
+function getToken() {
+  return localStorage.getItem('token');
+}
+function setToken(token) {
+  localStorage.setItem('token', token);
+}
+function removeToken() {
+  localStorage.removeItem('token');
+}
+function authHeaders() {
+  return { Authorization: "Bearer " + getToken() };
+}
 
+// ------------------------------
+// -- Auth form --
+// ------------------------------
+function AuthForm({ setUser, setPage }) {
+  const [mode, setMode] = useState("login"); // or "register"
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [err, setErr] = useState("");
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setErr("");
+    try {
+      if (mode === "register") {
+        await axios.post("http://localhost:4000/register", { username, password });
+        setMode("login");
+        setErr("Compte créé. Connectez-vous !");
+      } else {
+        const res = await axios.post("http://localhost:4000/login", { username, password });
+        setToken(res.data.token);
+        // fetch user data
+        const me = await axios.get("http://localhost:4000/me", { headers: authHeaders() });
+        setUser(me.data);
+        setPage("dashboard");
+      }
+    } catch (e) {
+      setErr(e?.response?.data?.error || "Erreur serveur");
+    }
+  }
+
+  return (
+    <div style={{ maxWidth: 300, margin: "40px auto", padding: 20, border: "1px solid #ddd", borderRadius: 10 }}>
+      <h2>{mode === "login" ? "Connexion" : "Inscription"}</h2>
+      <form onSubmit={handleSubmit}>
+        <input placeholder="Nom d'utilisateur" value={username} onChange={e => setUsername(e.target.value)} required style={{ width: "100%", marginBottom: 8 }} />
+        <input placeholder="Mot de passe" value={password} onChange={e => setPassword(e.target.value)} required type="password" style={{ width: "100%", marginBottom: 8 }} />
+        <button type="submit" style={{ width: "100%", marginBottom: 8 }}>{mode === "login" ? "Se connecter" : "Créer un compte"}</button>
+      </form>
+      <button onClick={() => setMode(mode === "login" ? "register" : "login")} style={{ width: "100%" }}>
+        {mode === "login" ? "Créer un compte" : "Déjà inscrit ? Se connecter"}
+      </button>
+      {err && <div style={{ color: "red", marginTop: 8 }}>{err}</div>}
+    </div>
+  );
+}
+
+// ------------------------------
+// -- Main App --
+// ------------------------------
 function App() {
-  const [data, setData] = useState({
-    tasks: [],
-    contacts: [],
-    notes: "",
-    progress: 0,
-  });
+  const [user, setUser] = useState(null); // {id, username}
+  const [page, setPage] = useState("loading"); // "loading" | "auth" | "dashboard"
+  const [tasks, setTasks] = useState([]);
+  const [contacts, setContacts] = useState([]);
+  const [githubStatus, setGithubStatus] = useState('');
 
+  // -------------------------------
+  // Initialisation : check token/user, fetch données
   useEffect(() => {
-    socket.on("init", (d) => setData(d));
-    socket.on("data", (d) => setData(d));
-    axios.get("http://localhost:4000/data").then((res) => setData(res.data));
-    return () => socket.off();
+    async function fetchMeAndData() {
+      const token = getToken();
+      if (!token) {
+        setPage("auth");
+        return;
+      }
+      try {
+        const me = await axios.get("http://localhost:4000/me", { headers: authHeaders() });
+        setUser(me.data);
+        setPage("dashboard");
+        // fetch tasks/contacts
+        const [tasksRes, contactsRes] = await Promise.all([
+          axios.get("http://localhost:4000/tasks", { headers: authHeaders() }),
+          axios.get("http://localhost:4000/contacts", { headers: authHeaders() }),
+        ]);
+        setTasks(tasksRes.data);
+        setContacts(contactsRes.data);
+      } catch (e) {
+        removeToken();
+        setPage("auth");
+      }
+    }
+    fetchMeAndData();
   }, []);
 
-  const updateTasks = (tasks) => {
-    socket.emit("update", { tasks });
+  // -------------------------------
+  // HANDLERS pour TaskBoard/ContactBoard : CRUD via API REST
+  const fetchTasks = async () => {
+    const res = await axios.get("http://localhost:4000/tasks", { headers: authHeaders() });
+    setTasks(res.data);
+  };
+  const fetchContacts = async () => {
+    const res = await axios.get("http://localhost:4000/contacts", { headers: authHeaders() });
+    setContacts(res.data);
   };
 
-  const updateContacts = (contacts) => {
-    socket.emit("update", { contacts });
+  // Pour TaskBoard
+  const handleTaskAdd = async (task) => {
+    await axios.post("http://localhost:4000/tasks", task, { headers: authHeaders() });
+    fetchTasks();
+  };
+  const handleTaskUpdate = async (id, update) => {
+    await axios.put(`http://localhost:4000/tasks/${id}`, update, { headers: authHeaders() });
+    fetchTasks();
+  };
+  const handleTaskDelete = async (id) => {
+    await axios.delete(`http://localhost:4000/tasks/${id}`, { headers: authHeaders() });
+    fetchTasks();
   };
 
-  function exportJSON(data) {
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
+  // Pour ContactBoard
+  const handleContactAdd = async (contact) => {
+    await axios.post("http://localhost:4000/contacts", contact, { headers: authHeaders() });
+    fetchContacts();
+  };
+  const handleContactUpdate = async (id, update) => {
+    await axios.put(`http://localhost:4000/contacts/${id}`, update, { headers: authHeaders() });
+    fetchContacts();
+  };
+  const handleContactDelete = async (id) => {
+    await axios.delete(`http://localhost:4000/contacts/${id}`, { headers: authHeaders() });
+    fetchContacts();
+  };
+
+  // --- Sauvegarde sur GitHub (optionnel, accessible à tous les users) ---
+  async function saveToGitHub(setStatus) {
+    setStatus("Envoi sur GitHub...");
+    try {
+      const res = await axios.post("http://localhost:4000/github-save", { tasks, contacts });
+      if (res.data.ok) {
+        setStatus("Sauvegardé sur GitHub !");
+      } else {
+        setStatus("Erreur : fallback issue GitHub créé");
+      }
+    } catch (e) {
+      setStatus("Erreur critique lors de la sauvegarde");
+    }
+  }
+
+  // --- EXPORT JSON ---
+  function exportJSON() {
+    const blob = new Blob([JSON.stringify({ tasks, contacts }, null, 2)], {
       type: "application/json",
     });
     const url = URL.createObjectURL(blob);
@@ -42,16 +171,48 @@ function App() {
     URL.revokeObjectURL(url);
   }
 
+  // --- Déconnexion ---
+  function logout() {
+    removeToken();
+    setUser(null);
+    setPage("auth");
+    setTasks([]);
+    setContacts([]);
+  }
+
+  // --- Rendu ---
+  if (page === "loading") return <div>Chargement…</div>;
+  if (page === "auth") return <AuthForm setUser={setUser} setPage={setPage} />;
+
   return (
     <div>
-      <h1>Dashboard Collaboratif</h1>
-      <button onClick={() => exportJSON(data)}>
-        Exporter les données (.json)
+      <h1>
+        Dashboard Collaboratif
+        <span style={{ fontSize: 18, color: "#888", marginLeft: 12 }}>
+          Connecté en tant que {user?.username}
+        </span>
+        <button onClick={logout} style={{ marginLeft: 16 }}>Se déconnecter</button>
+      </h1>
+      <button onClick={() => saveToGitHub(setGithubStatus)}>
+        Sauvegarder sur GitHub
       </button>
-
-      <ProgressDashboard tasks={data.tasks} />
-      <TaskBoard tasks={data.tasks} onUpdate={updateTasks} />
-      <ContactBoard contacts={data.contacts} onUpdate={updateContacts} />
+      <button onClick={exportJSON} style={{ marginLeft: 8 }}>
+        Exporter en JSON
+      </button>
+      <span style={{ marginLeft: 10 }}>{githubStatus}</span>
+      <ProgressDashboard tasks={tasks} />
+      <TaskBoard
+        tasks={tasks}
+        onAdd={handleTaskAdd}
+        onUpdate={handleTaskUpdate}
+        onDelete={handleTaskDelete}
+      />
+      <ContactBoard
+        contacts={contacts}
+        onAdd={handleContactAdd}
+        onUpdate={handleContactUpdate}
+        onDelete={handleContactDelete}
+      />
     </div>
   );
 }
