@@ -2,33 +2,32 @@ import React from 'react';
 
 const priorityColor = { 'Haute': 'red', 'Moyenne': 'orange', 'Basse': 'green' };
 
-function ContactBoard({ contacts, onUpdate }) {
-  const updateContact = (id, field, value) => {
-    onUpdate(
-      contacts.map(c => c.id === id ? { ...c, [field]: value } : c)
-    );
-  };
-
-  const addContact = () => {
+function ContactBoard({ contacts, onAdd, onUpdate, onDelete }) {
+  // --- AJOUT ---
+  const addContact = async () => {
     const name = prompt("Nom du contact ?");
     if (name) {
-      onUpdate([
-        ...contacts,
-        {
-          id: Date.now(),
-          name,
-          type: 'Organisation',
-          priority: 'Basse',
-          status: 'À contacter',
-          notes: ''
-        }
-      ]);
+      await onAdd({
+        name,
+        type: 'Organisation', // ou 'Personnalité'
+        priority: 'Basse',
+        status: 'À contacter',
+        notes: ''
+      });
     }
   };
 
-  const removeContact = id => {
+  // --- MODIF ---
+  const updateContact = async (id, field, value) => {
+    const c = contacts.find(c => c.id === id);
+    if (!c) return;
+    await onUpdate(id, { ...c, [field]: value });
+  };
+
+  // --- SUPPRESSION ---
+  const removeContact = async (id) => {
     if (window.confirm("Supprimer ce contact ?")) {
-      onUpdate(contacts.filter(c => c.id !== id));
+      await onDelete(id);
     }
   };
 
@@ -46,7 +45,7 @@ function ContactBoard({ contacts, onUpdate }) {
               marginLeft: 10
             }}>{c.priority}</span>
             <br />
-            Statut : 
+            Statut :
             <select
               value={c.status}
               onChange={e => updateContact(c.id, "status", e.target.value)}
@@ -58,7 +57,7 @@ function ContactBoard({ contacts, onUpdate }) {
               <option>Terminé</option>
             </select>
             <br />
-            Priorité : 
+            Priorité :
             <select
               value={c.priority}
               onChange={e => updateContact(c.id, "priority", e.target.value)}
@@ -69,7 +68,7 @@ function ContactBoard({ contacts, onUpdate }) {
               <option>Basse</option>
             </select>
             <br />
-            Notes : 
+            Notes :
             <textarea
               value={c.notes}
               onChange={e => updateContact(c.id, "notes", e.target.value)}
