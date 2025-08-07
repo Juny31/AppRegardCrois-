@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const path = require('path');
 
 // Configuration pour Railway
-const PORT = process.env.PORT || 4000;
+const PORT = parseInt(process.env.PORT) || 4000;
 const JWT_SECRET = process.env.JWT_SECRET || 'vraiment_pas_secure_change_le';
 
 const app = express();
