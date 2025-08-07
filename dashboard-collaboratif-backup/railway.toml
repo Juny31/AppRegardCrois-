@@ -1,9 +1,9 @@
 [build]
 builder = "nixpacks"
-buildCommand = "cd backend && npm install"
+buildCommand = "cd dashboard-collaboratif-backup/backend && npm install"
 
 [deploy]
-startCommand = "cd backend && npm start"
+startCommand = "cd dashboard-collaboratif-backup/backend && npm start"
 restartPolicyType = "on_failure"
 
 [variables]
