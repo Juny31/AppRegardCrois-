@@ -29,6 +29,8 @@ import theme from "./theme";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
+
 function getToken() {
   return localStorage.getItem("token");
 }
@@ -53,14 +55,14 @@ function AuthForm({ onLogin }) {
     setErr("");
     try {
       if (mode === "register") {
-        await axios.post("http://localhost:4000/register", {
+        await axios.post(`${API_URL}/register`, { // ← Changé ici
           username,
           password,
         });
         setMode("login");
         setErr("Compte créé. Connectez-vous !");
       } else {
-        const res = await axios.post("http://localhost:4000/login", {
+        const res = await axios.post(`${API_URL}/login`, { // ← Changé ici
           username,
           password,
         });
@@ -306,15 +308,15 @@ export default function App() {
       return;
     }
     try {
-      const me = await axios.get("http://localhost:4000/me", {
+      const me = await axios.get(`${API_URL}/me`, { // ← Changé ici
         headers: authHeaders(),
       });
       setUser(me.data);
       setPage("dashboard");
       const [tasksRes, contactsRes, usersRes] = await Promise.all([
-        axios.get("http://localhost:4000/tasks", { headers: authHeaders() }),
-        axios.get("http://localhost:4000/contacts", { headers: authHeaders() }),
-        axios.get("http://localhost:4000/users", { headers: authHeaders() }),
+        axios.get(`${API_URL}/tasks`, { headers: authHeaders() }), // ← Changé ici
+        axios.get(`${API_URL}/contacts`, { headers: authHeaders() }), // ← Changé ici
+        axios.get(`${API_URL}/users`, { headers: authHeaders() }), // ← Changé ici
       ]);
       setTasks(tasksRes.data);
       setContacts(contactsRes.data);
@@ -328,6 +330,7 @@ export default function App() {
       setUsers([]);
     }
   }, []);
+  
 
   useEffect(() => {
     loadUserAndData();
@@ -336,7 +339,7 @@ export default function App() {
   // CRUD functions
   const fetchTasks = async () => {
     try {
-      const res = await axios.get("http://localhost:4000/tasks", {
+      const res = await axios.get(`${API_URL}/tasks`, {
         headers: authHeaders(),
       });
       setTasks(res.data);
@@ -348,7 +351,7 @@ export default function App() {
 
   const fetchContacts = async () => {
     try {
-      const res = await axios.get("http://localhost:4000/contacts", {
+      const res = await axios.get(`${API_URL}/contacts`, {
         headers: authHeaders(),
       });
       setContacts(res.data);
@@ -360,7 +363,7 @@ export default function App() {
 
   const handleTaskAdd = async (task) => {
     try {
-      await axios.post("http://localhost:4000/tasks", task, {
+      await axios.post(`${API_URL}/tasks`, task, {
         headers: authHeaders(),
       });
       await fetchTasks();
@@ -373,7 +376,7 @@ export default function App() {
 
   const handleTaskUpdate = async (id, update) => {
     try {
-      await axios.put(`http://localhost:4000/tasks/${id}`, update, {
+      await axios.put(`${API_URL}/tasks/${id}`, update, {
         headers: authHeaders(),
       });
       await fetchTasks();
@@ -386,7 +389,7 @@ export default function App() {
 
   const handleTaskDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:4000/tasks/${id}`, {
+      await axios.delete(`${API_URL}/tasks/${id}`, {
         headers: authHeaders(),
       });
       await fetchTasks();
@@ -396,10 +399,10 @@ export default function App() {
       setSnack("Erreur lors de la suppression de la tâche");
     }
   };
-
+  
   const handleContactAdd = async (contact) => {
     try {
-      await axios.post("http://localhost:4000/contacts", contact, {
+      await axios.post(`${API_URL}/contacts`, contact, {
         headers: authHeaders(),
       });
       await fetchContacts();
@@ -409,10 +412,10 @@ export default function App() {
       setSnack("Erreur lors de l'ajout du contact");
     }
   };
-
+  
   const handleContactUpdate = async (id, update) => {
     try {
-      await axios.put(`http://localhost:4000/contacts/${id}`, update, {
+      await axios.put(`${API_URL}/contacts/${id}`, update, {
         headers: authHeaders(),
       });
       await fetchContacts();
@@ -422,10 +425,10 @@ export default function App() {
       setSnack("Erreur lors de la modification du contact");
     }
   };
-
+  
   const handleContactDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:4000/contacts/${id}`, {
+      await axios.delete(`${API_URL}/contacts/${id}`, {
         headers: authHeaders(),
       });
       await fetchContacts();
@@ -455,7 +458,7 @@ export default function App() {
   async function saveToGitHub(setStatus) {
     setStatus("Envoi sur GitHub...");
     try {
-      const res = await axios.post("http://localhost:4000/github-save", {
+      const res = await axios.post(`${API_URL}/github-save`, {
         tasks,
         contacts,
       });
