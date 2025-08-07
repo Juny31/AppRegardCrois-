@@ -6,7 +6,6 @@ const path = require('path');
 // Configuration pour Railway
 const PORT = parseInt(process.env.PORT) || 4000;
 const JWT_SECRET = process.env.JWT_SECRET || 'vraiment_pas_secure_change_le';
-
 const app = express();
 
 // CORS configuration pour production
