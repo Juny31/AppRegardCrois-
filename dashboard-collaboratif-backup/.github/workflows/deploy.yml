@@ -1,0 +1,45 @@
+# Créez le fichier .github/workflows/deploy.yml
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'dashboard-collaboratif-backup/package-lock.json'
+        
+    - name: Install dependencies
+      run: |
+        cd dashboard-collaboratif-backup
+        npm ci
+        
+    - name: Create .env.production
+      run: |
+        cd dashboard-collaboratif-backup
+        echo "REACT_APP_API_URL=https://appregardcrois-production.up.railway.app" > .env.production
+        
+    - name: Build
+      run: |
+        cd dashboard-collaboratif-backup
+        npm run build
+        
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: dashboard-collaboratif-backup/build
+        cname: false
