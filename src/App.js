@@ -35,19 +35,6 @@ function loadData() {
 function genId() {
   return Math.random().toString(36).slice(2, 10) + Date.now();
 }
-function formatSocials(socials) {
-  if (!socials) return "";
-  try {
-    const obj = typeof socials === "string" ? JSON.parse(socials) : socials;
-    if (!obj || typeof obj !== "object") return "";
-    return Object.entries(obj)
-      .filter(([k, v]) => !!v)
-      .map(([k, v]) => `${k}: ${v}`)
-      .join(", ");
-  } catch (e) {
-    return socials;
-  }
-}
 
 // -- EXPORT PDF (toutes les données !) --
 function exportPDF(tasks, contacts, theme) {
