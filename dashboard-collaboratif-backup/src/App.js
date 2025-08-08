@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useCallback } from "react";
+// src/App.js
+
+import React, { useState, useEffect } from "react";
 import {
   ThemeProvider, CssBaseline, Box, AppBar, Toolbar, Typography, Button, Container,
   Paper, Tabs, Tab, Snackbar, Stack, CircularProgress
@@ -15,7 +17,6 @@ import ContactBoard from "./components/ContactBoard";
 
 // -- UTILITAIRES LOCALSTORAGE --
 const LS_KEY = "dashboard-collab-data-v1";
-
 function saveData({ user, tasks, contacts, theme }) {
   localStorage.setItem(
     LS_KEY,
@@ -31,8 +32,9 @@ function loadData() {
     return { user: null, tasks: [], contacts: [], theme: null };
   }
 }
-
-// -- FORMATS PDF --
+function genId() {
+  return Math.random().toString(36).slice(2, 10) + Date.now();
+}
 function formatSocials(socials) {
   if (!socials) return "";
   try {
@@ -47,136 +49,143 @@ function formatSocials(socials) {
   }
 }
 
+// -- EXPORT PDF (toutes les données !) --
 function exportPDF(tasks, contacts, theme) {
   try {
-    const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
-    const marginLeft = 40;
-    let currentY = 40;
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "pt",
+      format: "a4",
+      putOnlyUsedFonts:true
+    });
 
-    doc.setFontSize(26);
-    doc.setFont(undefined, 'bold');
-    doc.text("Dashboard Collaboratif (local)", marginLeft, currentY);
+    const margin = 40;
+    let y = margin;
 
-    // Thème du mois
-    currentY += 38;
-    doc.setFontSize(17);
-    doc.setFont(undefined, 'bold');
-    doc.text("Thème du mois", marginLeft, currentY);
-    currentY += 24;
-    doc.setFont(undefined, 'normal');
-    doc.setFontSize(13);
-    doc.text(theme?.title || "Titre du thème", marginLeft, currentY);
-    currentY += 20;
+    // --- HEADER ---
+    doc.setFontSize(22);
+    doc.setFont("helvetica", "bold");
+    doc.text("Dashboard Collaboratif", margin, y);
+
+    y += 30;
     doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
     doc.text(
-      theme?.description || "Description du thème du mois.",
-      marginLeft, currentY, { maxWidth: 520 }
+      `Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}`,
+      margin,
+      y
     );
-    currentY += 30;
 
-    // Tâches
-    doc.setFontSize(16);
-    doc.setFont(undefined, 'bold');
-    doc.text("Tâches", marginLeft, currentY);
-    currentY += 10;
+    y += 15;
+    doc.setDrawColor(41, 121, 255);
+    doc.setLineWidth(2);
+    doc.line(margin, y, 550, y);
+    y += 25;
 
-    if (tasks && tasks.length > 0) {
-      autoTable(doc, {
-        startY: currentY + 8,
-        margin: { left: marginLeft, right: 30 },
-        head: [["Titre", "Statut", "Priorité", "Notes"]],
-        body: tasks.map(t => [
-          (t.title || '').substring(0, 35),
-          (t.status || ''),
-          (t.priority || ''),
-          (t.notes || '').substring(0, 50)
-        ]),
-        headStyles: {
-          fillColor: [41, 121, 255], textColor: [255,255,255], fontStyle: 'bold'
-        },
-        alternateRowStyles: { fillColor: [238, 242, 251] },
-        styles: { fontSize: 10, cellPadding: 4 },
-      });
-      currentY = doc.lastAutoTable.finalY + 18;
-    } else {
-      doc.setFontSize(11);
-      doc.setTextColor(150, 150, 150);
-      doc.text("Aucune tâche à afficher", marginLeft, currentY + 18);
-      doc.setTextColor(0, 0, 0);
-      currentY += 38;
+    // --- THEME ---
+    doc.setFontSize(13);
+    doc.setFont("helvetica", "bold");
+    doc.text("Thème du mois :", margin, y);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(13);
+    doc.text(theme?.title || "Non défini", margin + 110, y);
+
+    y += 18;
+    doc.setFontSize(11);
+    let descLines = doc.splitTextToSize(theme?.description || "Aucune description.", 520);
+    doc.text(descLines, margin, y);
+    y += descLines.length * 14 + 8;
+
+    // --- TABLEAU TÂCHES ---
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Tâches", margin, y);
+    y += 10;
+
+    autoTable(doc, {
+      startY: y + 5,
+      margin: { left: margin, right: margin },
+      head: [[
+        "Titre", "Statut", "Priorité", "Notes"
+      ]],
+      body: tasks.map(t => [
+        t.title || "",
+        t.status || "",
+        t.priority || "",
+        t.notes || ""
+      ]),
+      styles: { fontSize: 10, cellPadding: 4 },
+      headStyles: { fillColor: [41, 121, 255], textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [240, 245, 255] },
+    });
+
+    y = doc.lastAutoTable.finalY + 20;
+
+    // --- TABLEAU CONTACTS ---
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Contacts", margin, y);
+    y += 10;
+
+    autoTable(doc, {
+      startY: y + 5,
+      margin: { left: margin, right: margin },
+      head: [[
+        "Nom", "Type", "Statut", "Priorité", "Email", "Téléphone", "Site", "Adresse", "Notes"
+      ]],
+      body: contacts.map(c => [
+        c.name || "",
+        c.type || "",
+        c.status || "",
+        c.priority || "",
+        c.email || "",
+        c.phone || "",
+        c.website || "",
+        c.address || "",
+        c.notes || ""
+      ]),
+      styles: { fontSize: 9, cellPadding: 3 },
+      headStyles: { fillColor: [41, 121, 255], textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [245, 245, 255] },
+      columnStyles: {
+        0: { cellWidth: 55 },
+        1: { cellWidth: 48 },
+        2: { cellWidth: 52 },
+        3: { cellWidth: 45 },
+        4: { cellWidth: 88 },
+        5: { cellWidth: 65 },
+        6: { cellWidth: 60 },
+        7: { cellWidth: 70 },
+        8: { cellWidth: 80 },
+      }
+    });
+
+    y = doc.lastAutoTable.finalY + 18;
+
+    // --- FOOTER ---
+    const pageCount = doc.internal.getNumberOfPages();
+    for(let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(120,120,120);
+      doc.text(
+        `Dashboard Collaboratif • Page ${i}/${pageCount}`,
+        margin,
+        doc.internal.pageSize.height - 18
+      );
     }
 
-    // Contacts
-    doc.setFontSize(16);
-    doc.setFont(undefined, 'bold');
-    doc.text("Contacts", marginLeft, currentY);
-    currentY += 10;
-
-    if (contacts && contacts.length > 0) {
-      autoTable(doc, {
-        startY: currentY + 8,
-        margin: { left: marginLeft, right: 30 },
-        head: [
-          [
-            "Nom", "Type", "Statut", "Priorité",
-            "Email", "Téléphone", "Site web",
-            "Adresse", "Réseaux sociaux"
-          ]
-        ],
-        body: contacts.map(c => [
-          (c.name || '').substring(0, 20),
-          (c.type || ''),
-          (c.status || ''),
-          (c.priority || ''),
-          (c.email || '').substring(0, 30),
-          (c.phone || '').substring(0, 18),
-          (c.website || '').substring(0, 20),
-          (c.address || '').substring(0, 24),
-          formatSocials(c.socials).substring(0, 40),
-        ]),
-        headStyles: {
-          fillColor: [41, 121, 255], textColor: [255,255,255], fontStyle: 'bold'
-        },
-        alternateRowStyles: { fillColor: [238, 242, 251] },
-        styles: { fontSize: 9, cellPadding: 3, overflow: 'linebreak' },
-        columnStyles: {
-          0: { cellWidth: 50 }, 1: { cellWidth: 45 }, 2: { cellWidth: 53 },
-          3: { cellWidth: 45 }, 4: { cellWidth: 66 }, 5: { cellWidth: 58 },
-          6: { cellWidth: 60 }, 7: { cellWidth: 65 }, 8: { cellWidth: 90 },
-        },
-      });
-      currentY = doc.lastAutoTable.finalY + 18;
-    } else {
-      doc.setFontSize(11);
-      doc.setTextColor(150, 150, 150);
-      doc.text("Aucun contact à afficher", marginLeft, currentY + 18);
-      doc.setTextColor(0, 0, 0);
-    }
-
-    // Footer
-    const now = new Date();
-    doc.setFontSize(9);
-    doc.setTextColor(128, 128, 128);
-    doc.text(
-      `Généré le ${now.toLocaleDateString('fr-FR')} à ${now.toLocaleTimeString('fr-FR')} | Dashboard Collaboratif`,
-      marginLeft,
-      doc.internal.pageSize.height - 18
-    );
-    const statsText = `${tasks.length} tâche(s) • ${contacts.length} contact(s)`;
-    doc.text(
-      statsText,
-      doc.internal.pageSize.width - marginLeft - doc.getTextWidth(statsText),
-      doc.internal.pageSize.height - 18
-    );
-    const fileName = `dashboard-${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}-${now.getHours()}${now.getMinutes()}.pdf`;
+    const fileName = `Dashboard_Collaboratif_${Date.now()}.pdf`;
     doc.save(fileName);
     return true;
+
   } catch (error) {
-    console.error('❌ Erreur lors de l\'export PDF:', error);
-    alert('Une erreur est survenue lors de l\'export PDF. Consultez la console pour plus de détails.');
+    console.error('❌ Erreur lors de la génération du PDF:', error);
+    alert('Erreur export PDF. Consultez la console.');
     return false;
   }
 }
+
 
 // -- FORM THÈME --
 function ThemeOfTheMonth({ theme, onSave }) {
@@ -224,7 +233,10 @@ export default function App() {
   const [user, setUser] = useState({ username: "Utilisateur" });
   const [tasks, setTasks] = useState([]);
   const [contacts, setContacts] = useState([]);
-  const [themeObj, setThemeObj] = useState({ title: "Les conflits vus par les opprimés", description: "Donner la parole à ceux qui subissent la violence, et comprendre la réalité des conflits à travers leur regard." });
+  const [themeObj, setThemeObj] = useState({
+    title: "Les conflits vus par les opprimés",
+    description: "Donner la parole à ceux qui subissent la violence, et comprendre la réalité des conflits à travers leur regard."
+  });
 
   const [tab, setTab] = useState(0);
   const [snack, setSnack] = useState("");
@@ -243,19 +255,33 @@ export default function App() {
     saveData({ user, tasks, contacts, theme: themeObj });
   }, [user, tasks, contacts, themeObj]);
 
-  // --- CRUD TASKS
-  const handleTaskAdd = async (task) => { setTasks([...tasks, task]); setSnack("Tâche ajoutée !"); };
-  const handleTaskUpdate = async (id, update) => {
-    setTasks(tasks.map((t, i) => i === id ? { ...t, ...update } : t)); setSnack("Tâche modifiée !");
+  // --- CRUD TASKS (avec id unique)
+  const handleTaskAdd = (task) => {
+    setTasks([...tasks, { ...task, id: genId() }]);
+    setSnack("Tâche ajoutée !");
   };
-  const handleTaskDelete = async (id) => { setTasks(tasks.filter((_, i) => i !== id)); setSnack("Tâche supprimée !"); };
+  const handleTaskUpdate = (id, update) => {
+    setTasks(tasks.map((t) => t.id === id ? { ...t, ...update } : t));
+    setSnack("Tâche modifiée !");
+  };
+  const handleTaskDelete = (id) => {
+    setTasks(tasks.filter((t) => t.id !== id));
+    setSnack("Tâche supprimée !");
+  };
 
-  // --- CRUD CONTACTS
-  const handleContactAdd = async (contact) => { setContacts([...contacts, contact]); setSnack("Contact ajouté !"); };
-  const handleContactUpdate = async (id, update) => {
-    setContacts(contacts.map((c, i) => i === id ? { ...c, ...update } : c)); setSnack("Contact modifié !");
+  // --- CRUD CONTACTS (avec id unique)
+  const handleContactAdd = (contact) => {
+    setContacts([...contacts, { ...contact, id: genId() }]);
+    setSnack("Contact ajouté !");
   };
-  const handleContactDelete = async (id) => { setContacts(contacts.filter((_, i) => i !== id)); setSnack("Contact supprimé !"); };
+  const handleContactUpdate = (id, update) => {
+    setContacts(contacts.map((c) => c.id === id ? { ...c, ...update } : c));
+    setSnack("Contact modifié !");
+  };
+  const handleContactDelete = (id) => {
+    setContacts(contacts.filter((c) => c.id !== id));
+    setSnack("Contact supprimé !");
+  };
 
   // --- PDF EXPORT
   const handleExportPDF = () => {
