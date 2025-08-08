@@ -52,7 +52,7 @@ function exportPDF(tasks, contacts, theme) {
     // --- HEADER ---
     doc.setFontSize(22);
     doc.setFont("helvetica", "bold");
-    doc.text("Dashboard Collaboratif", margin, y);
+    doc.text("Rapport CR", margin, y);
 
     y += 30;
     doc.setFontSize(11);
@@ -156,13 +156,13 @@ function exportPDF(tasks, contacts, theme) {
       doc.setFontSize(8);
       doc.setTextColor(120,120,120);
       doc.text(
-        `Dashboard Collaboratif • Page ${i}/${pageCount}`,
+        `Regard Croise • Page ${i}/${pageCount}`,
         margin,
         doc.internal.pageSize.height - 18
       );
     }
 
-    const fileName = `Dashboard_Collaboratif_${Date.now()}.pdf`;
+    const fileName = `Rapport_RC_${Date.now()}.pdf`;
     doc.save(fileName);
     return true;
 
